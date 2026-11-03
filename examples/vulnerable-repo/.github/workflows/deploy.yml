@@ -1,0 +1,36 @@
+name: Deploy
+
+on: [push]
+
+permissions: write-all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: node
+    services:
+      db:
+        image: postgres:latest
+    steps:
+      - uses: actions/checkout@main
+      - uses: docker://alpine
+      - uses: actions/setup-node@v3
+      - uses: actions/create-release@v1
+      - uses: actions/download-artifact@v4.1.2
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Clone private mirror
+        run: |
+          git clone https://deploy:${{ secrets.MIRROR_TOKEN }}@github.com/org/private.git
+
+      - name: Notify
+        run: ./notify.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  call-shared:
+    uses: org/shared-workflows/.github/workflows/release.yml@master
+    secrets: inherit

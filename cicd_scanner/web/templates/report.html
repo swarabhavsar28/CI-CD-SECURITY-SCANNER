@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Report - {{ report.target }}{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="head" style="display:flex;gap:12px;align-items:baseline;flex-wrap:wrap">
+    <h1 style="margin:0">{{ report.target }}</h1>
+    <span class="muted">{{ report.scanned_at }}</span>
+    <span style="margin-left:auto" class="actions">
+      <a class="btn secondary" href="{{ url_for('report_json', name=name) }}">Download JSON</a>
+      <a class="btn secondary" href="{{ url_for('index') }}">All reports</a>
+    </span>
+  </div>
+  <p class="muted" style="margin:8px 0 14px">
+    {{ report.files | length }} workflow file(s):
+    {% for f in report.files %}<code>{{ f }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+  </p>
+  <div class="counts">
+    {% for sev in severities %}
+      <div class="count {{ sev }}"><span class="n">{{ summary[sev] }}</span><span class="l">{{ sev }}</span></div>
+    {% endfor %}
+    <div class="count"><span class="n">{{ summary.total }}</span><span class="l">TOTAL</span></div>
+  </div>
+  {% if report.errors %}
+  <h2 style="margin-top:16px">Warnings</h2>
+  <ul class="errors">{% for error in report.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+  {% endif %}
+</div>
+
+{% if findings %}
+<div class="panel filters" id="filters">
+  <strong>Show:</strong>
+  {% for sev in severities %}
+    <label><input type="checkbox" data-filter="severity" value="{{ sev }}" checked> <span class="badge {{ sev }}">{{ sev }}</span></label>
+  {% endfor %}
+  <span style="margin-left:12px"><strong>Category:</strong></span>
+  {% for cat in categories %}
+    <label><input type="checkbox" data-filter="category" value="{{ cat }}" checked> {{ cat }}</label>
+  {% endfor %}
+  <span class="muted" id="shown-count" style="margin-left:auto"></span>
+</div>
+
+<div id="findings">
+{% for f in findings %}
+  <article class="finding {{ f.severity }}" data-severity="{{ f.severity }}" data-category="{{ f.category }}">
+    <div class="head">
+      <span class="badge {{ f.severity }}">{{ f.severity }}</span>
+      <span class="mono muted">{{ f.rule_id }}</span>
+      <span class="title">{{ f.title }}</span>
+      <span class="loc mono">{{ f.file }}{% if f.line %}:{{ f.line }}{% endif %}</span>
+    </div>
+    <p>{{ f.message }}</p>
+    {% if f.evidence %}<div class="evidence mono">{{ f.evidence }}</div>{% endif %}
+    {% if f.remediation %}<div class="fix"><strong>Fix:</strong> {{ f.remediation }}</div>{% endif %}
+  </article>
+{% endfor %}
+</div>
+
+<script>
+  (function () {
+    const boxes = document.querySelectorAll('#filters input[type=checkbox]');
+    const cards = document.querySelectorAll('#findings .finding');
+    const counter = document.getElementById('shown-count');
+    // Filters are mirrored into the URL (?severity=CRITICAL,HIGH&category=misconfig) so a view can be shared.
+    const params = new URLSearchParams(location.search);
+    ['severity', 'category'].forEach(kind => {
+      if (!params.has(kind)) return;
+      const wanted = new Set(params.get(kind).split(',').map(s => s.trim()).filter(Boolean));
+      boxes.forEach(b => { if (b.dataset.filter === kind) b.checked = wanted.has(b.value); });
+    });
+    function apply() {
+      const allowed = { severity: new Set(), category: new Set() };
+      boxes.forEach(b => { if (b.checked) allowed[b.dataset.filter].add(b.value); });
+      let shown = 0;
+      cards.forEach(card => {
+        const ok = allowed.severity.has(card.dataset.severity) && allowed.category.has(card.dataset.category);
+        card.classList.toggle('hidden', !ok);
+        if (ok) shown++;
+      });
+      counter.textContent = shown + ' of ' + cards.length + ' shown';
+      const next = new URLSearchParams();
+      ['severity', 'category'].forEach(kind => {
+        const all = [...boxes].filter(b => b.dataset.filter === kind);
+        const on = all.filter(b => b.checked).map(b => b.value);
+        if (on.length !== all.length) next.set(kind, on.join(','));
+      });
+      const qs = next.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+    }
+    boxes.forEach(b => b.addEventListener('change', apply));
+    apply();
+  })();
+</script>
+{% else %}
+<div class="panel empty ok">&#10003; No findings &mdash; every workflow passed all checks.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}cicd-scanner{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --panel: #ffffff; --text: #1f2430; --muted: #6b7280; --border: #e2e5ea;
+      --critical: #b91c1c; --high: #dc2626; --medium: #d97706; --low: #2563eb; --info: #6b7280;
+      --accent: #2563eb; --btn-text: #ffffff; --ok: #15803d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #111418; --panel: #1a1f26; --text: #e5e7eb; --muted: #9ca3af; --border: #2b323c;
+              --critical: #f87171; --high: #ef4444; --medium: #f59e0b; --low: #60a5fa; --info: #9ca3af;
+              --accent: #60a5fa; --btn-text: #0b1220; --ok: #4ade80; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+    header { padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; gap: 16px; align-items: baseline; }
+    header a { color: inherit; text-decoration: none; font-weight: 600; }
+    header .sub { color: var(--muted); font-size: 13px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { font-size: 22px; overflow-wrap: anywhere; } h2 { font-size: 17px; }
+    p, td, .loc { overflow-wrap: anywhere; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 20px; }
+    a { color: var(--accent); }
+    .muted { color: var(--muted); }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; border: 1px solid var(--border); }
+    .flash.error { border-color: var(--high); color: var(--high); }
+    form.scan { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+    form.scan .full { grid-column: 1 / -1; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    input[type=text], input[type=password] { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 14px; }
+    button, .btn { padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--btn-text); font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+    button.secondary, .btn.secondary { background: transparent; color: var(--accent); }
+    button.danger { background: transparent; color: var(--high); border-color: var(--high); }
+    .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; }
+    .badge.CRITICAL { background: var(--critical); } .badge.HIGH { background: var(--high); }
+    .badge.MEDIUM { background: var(--medium); } .badge.LOW { background: var(--low); } .badge.INFO { background: var(--info); }
+    .counts { display: flex; gap: 10px; flex-wrap: wrap; }
+    .count { border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; min-width: 96px; }
+    .count .n { font-size: 22px; font-weight: 700; display: block; }
+    .count .l { font-size: 12px; color: var(--muted); }
+    .count.CRITICAL .n { color: var(--critical); } .count.HIGH .n { color: var(--high); }
+    .count.MEDIUM .n { color: var(--medium); } .count.LOW .n { color: var(--low); }
+    .filters { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 14px; }
+    .filters label { display: inline; margin: 0; color: inherit; }
+    .finding { border: 1px solid var(--border); border-left: 4px solid var(--info); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; background: var(--panel); }
+    .finding.CRITICAL { border-left-color: var(--critical); } .finding.HIGH { border-left-color: var(--high); }
+    .finding.MEDIUM { border-left-color: var(--medium); } .finding.LOW { border-left-color: var(--low); }
+    .finding .head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .finding .title { font-weight: 600; }
+    .finding .loc { color: var(--muted); font-size: 13px; margin-left: auto; }
+    .finding p { margin: 8px 0 0; }
+    .finding .evidence { margin-top: 8px; padding: 6px 10px; background: var(--bg); border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+    .finding .fix { margin-top: 8px; font-size: 14px; }
+    .finding .fix strong { color: var(--muted); font-weight: 600; }
+    .hidden { display: none; }
+    .empty { padding: 24px; text-align: center; color: var(--muted); }
+    .empty.ok { color: var(--ok); font-weight: 600; font-size: 16px; }
+    .actions { display: flex; gap: 8px; align-items: center; }
+    ul.errors { margin: 0; padding-left: 20px; color: var(--high); }
+  </style>
+</head>
+<body>
+<header>
+  <a href="{{ url_for('index') }}">cicd-scanner</a>
+  <span class="sub">GitHub Actions workflow security reports</span>
+</header>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

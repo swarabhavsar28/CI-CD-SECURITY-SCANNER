@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Reports - cicd-scanner{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>New scan</h1>
+  <form class="scan" method="post" action="{{ url_for('run_scan') }}">
+    <div class="full">
+      <label for="target">Repository URL, owner/repo, or local path</label>
+      <input type="text" id="target" name="target" placeholder="https://github.com/owner/repo  or  C:\projects\my-repo" required autofocus>
+    </div>
+    <div>
+      <label for="token">GitHub token (optional, for private repos / rate limits)</label>
+      <input type="password" id="token" name="token" autocomplete="off">
+    </div>
+    <div class="actions">
+      <label><input type="checkbox" name="check_latest" value="1"> Check latest releases via GitHub API</label>
+      <button type="submit">Scan</button>
+    </div>
+  </form>
+  <p class="muted" style="margin:10px 0 0">Reports are saved as JSON in <code>{{ config.REPORTS_DIR }}</code>.</p>
+</div>
+
+<div class="panel">
+  <h2>Saved reports</h2>
+  {% if entries %}
+  <table>
+    <thead>
+      <tr><th>Target</th><th>Scanned</th><th>Files</th><th>Findings</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for entry in entries %}
+      <tr>
+        <td><a href="{{ url_for('view_report', name=entry.name) }}">{{ entry.report.target }}</a><br><span class="muted mono">{{ entry.name }}</span></td>
+        <td class="muted">{{ entry.report.scanned_at }}</td>
+        <td>{{ entry.report.files | length }}</td>
+        <td>
+          {% for sev in severities %}{% if entry.summary[sev] %}<span class="badge {{ sev }}">{{ sev[0] }} {{ entry.summary[sev] }}</span> {% endif %}{% endfor %}
+          {% if not entry.summary.total %}<span class="muted">none</span>{% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('delete_report', name=entry.name) }}" onsubmit="return confirm('Delete {{ entry.name }}?')">
+            <button class="danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No reports yet. Run a scan above, or <code>cicd-scan scan &lt;target&gt; -o reports/name.json</code>.</div>
+  {% endif %}
+</div>
+{% endblock %}

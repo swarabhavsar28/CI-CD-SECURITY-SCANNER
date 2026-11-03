@@ -1,0 +1,10 @@
+name: Broken
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi
+      env:
+        GH_PAT: ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij
+    this is: [not, valid

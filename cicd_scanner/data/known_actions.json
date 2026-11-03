@@ -1,0 +1,156 @@
+{
+  "_comment": "Snapshot of popular actions, refreshed from GitHub tag listings on snapshot_date. latest_major = newest major release at that time; min_supported_major = oldest major that still runs on a supported runtime and has not been shut down. Use --check-latest to query GitHub for live release data instead.",
+  "snapshot_date": "2026-09-19",
+  "actions": {
+    "actions/checkout": {
+      "latest_major": 7,
+      "min_supported_major": 4,
+      "note": "v1-v3 run on Node 12/16, both retired by GitHub."
+    },
+    "actions/setup-node": {
+      "latest_major": 7,
+      "min_supported_major": 4
+    },
+    "actions/setup-python": {
+      "latest_major": 7,
+      "min_supported_major": 5
+    },
+    "actions/setup-go": {
+      "latest_major": 7,
+      "min_supported_major": 5
+    },
+    "actions/setup-java": {
+      "latest_major": 6,
+      "min_supported_major": 4
+    },
+    "actions/setup-dotnet": {
+      "latest_major": 6,
+      "min_supported_major": 4
+    },
+    "actions/upload-artifact": {
+      "latest_major": 7,
+      "min_supported_major": 4,
+      "note": "v1-v3 were shut down on 30 Jan 2025 and fail at runtime."
+    },
+    "actions/download-artifact": {
+      "latest_major": 8,
+      "min_supported_major": 4,
+      "note": "v1-v3 were shut down on 30 Jan 2025 and fail at runtime."
+    },
+    "actions/cache": {
+      "latest_major": 6,
+      "min_supported_major": 4,
+      "note": "v1, v2 and early v3 releases stopped working in early 2025 when the legacy cache service was retired."
+    },
+    "actions/github-script": {
+      "latest_major": 9,
+      "min_supported_major": 7
+    },
+    "actions/stale": {
+      "latest_major": 11,
+      "min_supported_major": 9
+    },
+    "docker/build-push-action": {
+      "latest_major": 7,
+      "min_supported_major": 5
+    },
+    "docker/login-action": {
+      "latest_major": 4,
+      "min_supported_major": 3
+    },
+    "docker/setup-buildx-action": {
+      "latest_major": 4,
+      "min_supported_major": 3
+    },
+    "docker/setup-qemu-action": {
+      "latest_major": 4,
+      "min_supported_major": 3
+    },
+    "docker/metadata-action": {
+      "latest_major": 6,
+      "min_supported_major": 5
+    },
+    "codecov/codecov-action": {
+      "latest_major": 7,
+      "min_supported_major": 4
+    },
+    "github/codeql-action": {
+      "latest_major": 4,
+      "min_supported_major": 3
+    },
+    "softprops/action-gh-release": {
+      "latest_major": 3,
+      "min_supported_major": 2
+    },
+    "peter-evans/create-pull-request": {
+      "latest_major": 8,
+      "min_supported_major": 6
+    },
+    "aws-actions/configure-aws-credentials": {
+      "latest_major": 6,
+      "min_supported_major": 3
+    },
+    "hashicorp/setup-terraform": {
+      "latest_major": 4,
+      "min_supported_major": 3
+    },
+    "ruby/setup-ruby": {
+      "latest_major": 1,
+      "min_supported_major": 1
+    },
+    "pnpm/action-setup": {
+      "latest_major": 6,
+      "min_supported_major": 4
+    },
+    "dorny/paths-filter": {
+      "latest_major": 4,
+      "min_supported_major": 3
+    },
+    "tj-actions/changed-files": {
+      "latest_major": 47,
+      "min_supported_major": 46
+    },
+    "pypa/gh-action-pypi-publish": {
+      "latest_major": 1,
+      "min_supported_major": 1,
+      "release_branches": [
+        "release/v1"
+      ]
+    },
+    "actions/setup-ruby": {
+      "deprecated": "Archived in 2021; use ruby/setup-ruby instead."
+    },
+    "actions/create-release": {
+      "deprecated": "Archived and unmaintained since 2021; use softprops/action-gh-release or the gh CLI."
+    },
+    "actions/upload-release-asset": {
+      "deprecated": "Archived and unmaintained since 2021; use softprops/action-gh-release or the gh CLI."
+    }
+  },
+  "vulnerable": [
+    {
+      "action": "tj-actions/changed-files",
+      "affected": "<46.0.1",
+      "advisory": "CVE-2025-30066",
+      "severity": "CRITICAL",
+      "summary": "Compromised in March 2025: every version tag was rewritten to point at a malicious commit that dumped the runner's memory (including secrets) into the job log.",
+      "fix": "Upgrade to v46.0.1 or later, pin to a full commit SHA, and rotate any secrets that were available to affected runs."
+    },
+    {
+      "action": "reviewdog/action-setup",
+      "affected": "<1.3.2",
+      "advisory": "CVE-2025-30154",
+      "severity": "CRITICAL",
+      "summary": "The v1 tag was compromised in March 2025 to leak CI secrets to the job log (the initial foothold of the tj-actions incident).",
+      "fix": "Pin to a full commit SHA of v1.3.2 or later and rotate exposed secrets."
+    },
+    {
+      "action": "actions/download-artifact",
+      "affected": ">=4.0.0,<4.1.7",
+      "advisory": "CVE-2024-42471",
+      "severity": "HIGH",
+      "summary": "Path traversal while extracting artifacts allows a crafted artifact to write files outside the destination directory.",
+      "fix": "Upgrade to v4.1.7 or later."
+    }
+  ]
+}
