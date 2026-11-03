@@ -22,7 +22,7 @@ def by_id(findings, rule_id):
 def test_vulnerable_example_triggers_every_rule(examples_dir):
     report = scan(str(examples_dir / "vulnerable-repo"))
     expected = {
-        "SEC001", "SEC002", "SEC003", "SEC007", "SEC009", "SEC010", "SEC011",
+        "SEC001", "SEC002", "SEC007", "SEC009", "SEC010", "SEC011",
         "MIS001", "MIS003", "MIS004", "MIS005", "MIS006", "MIS007", "MIS008", "MIS009",
         "VER001", "VER002", "VER003", "VER004", "VER005", "VER006", "VER007", "WF001",
     }
@@ -100,6 +100,33 @@ def test_url_with_embedded_credentials(run_rules):
     # expression-based password is fine
     findings = run_rules("run: git clone https://bob:${{secrets.T}}@example.com/repo.git\n")
     assert not by_id(findings, "SEC009")
+
+
+def test_slack_token_committed_in_workflow_is_flagged(run_rules):
+    # Construct synthetic Slack token dynamically at runtime so no complete
+    # xoxb-* literal is stored in tracked files (prevents GitHub Push Protection triggers).
+    part1 = "xox" + "b"
+    token = f"{part1}-123456789012-1234567890123-AbCdEfGhIjKlMnOpQrStUvWx"
+    workflow_yaml = (
+        "name: Deploy\n"
+        "on: push\n"
+        "jobs:\n"
+        "  notify:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: ./notify.sh\n"
+        "        env:\n"
+        f"          SLACK_TOKEN: {token}\n"
+    )
+    findings = run_rules(workflow_yaml)
+    slack_findings = by_id(findings, "SEC003")
+    assert len(slack_findings) == 1
+    finding = slack_findings[0]
+    assert finding.rule_id == "SEC003"
+    assert finding.severity == "CRITICAL"
+    assert "Slack token" in finding.title
+    assert finding.evidence.startswith("xoxb")
+    assert token not in finding.evidence
 
 
 def test_echoing_a_secret_is_flagged(run_rules):

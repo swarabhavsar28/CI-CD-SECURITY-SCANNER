@@ -22,7 +22,7 @@ jobs:
 
       - name: Clone private mirror
         run: |
-          git clone https://deploy:${{ secrets.MIRROR_TOKEN }}@github.com/org/private.git
+          git clone https://deploy:hunter2secret@github.com/org/private.git
 
       - name: Notify
         run: ./notify.sh
